@@ -1,0 +1,15 @@
+{
+  "name": "lerner",
+  "version": "1.0.0",
+  "license": "MIT",
+  "devDependencies": {
+    "@parcel/transformer-elm": "^2.1.0",
+    "elm": "^0.19.1-5",
+    "parcel": "^2.1.0"
+  },
+  "scripts": {
+    "start": "parcel index.html",
+    "build": "parcel build index.html"
+  },
+  "dependencies": {}
+}
