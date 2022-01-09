@@ -2,9 +2,11 @@ module Main exposing (..)
 
 import Array
 import Browser
+import Css as S exposing (margin2)
 import Csv.Decode as CSVD
-import Html exposing (Html, button, div, footer, h1, input, section, text)
-import Html.Events exposing (onClick, onInput)
+import Html.Styled exposing (..)
+import Html.Styled.Attributes exposing (css)
+import Html.Styled.Events exposing (onClick, onInput)
 import Http
 import Random exposing (generate)
 import Random.List exposing (shuffle)
@@ -12,7 +14,7 @@ import Random.List exposing (shuffle)
 
 main : Program {} Model Msg
 main =
-    Browser.element { init = init, update = update, view = view, subscriptions = always Sub.none }
+    Browser.element { init = init, update = update, view = view >> Html.Styled.toUnstyled, subscriptions = always Sub.none }
 
 
 type Step
@@ -103,7 +105,7 @@ update msg model =
                             ( model, Cmd.none )
 
                 Err _ ->
-                    ( model, Cmd.none )
+                    ( { model | inputSheetId = Nothing }, Cmd.none )
 
         ProcessShuffledCards shuffled ->
             ( { model | data = Just <| Array.fromList shuffled, step = Cards }, Cmd.none )
@@ -117,10 +119,10 @@ update msg model =
                     Array.length (Maybe.withDefault Array.empty model.data)
             in
             if model.currentCard == dataLength - 1 then
-                ( { model | currentCard = 0 }, Cmd.none )
+                ( { model | currentCard = 0, cardFlipped = False }, Cmd.none )
 
             else
-                ( { model | currentCard = model.currentCard + 1 }, Cmd.none )
+                ( { model | currentCard = model.currentCard + 1, cardFlipped = False }, Cmd.none )
 
         PreviousCard ->
             if model.currentCard == 0 then
@@ -128,28 +130,34 @@ update msg model =
                     dataLength =
                         Array.length (Maybe.withDefault Array.empty model.data)
                 in
-                ( { model | currentCard = dataLength - 1 }, Cmd.none )
+                ( { model | currentCard = dataLength - 1, cardFlipped = False }, Cmd.none )
 
             else
-                ( { model | currentCard = model.currentCard - 1 }, Cmd.none )
+                ( { model | currentCard = model.currentCard - 1, cardFlipped = False }, Cmd.none )
 
 
 view : Model -> Html Msg
 view model =
     case model.step of
         SelectSource ->
-            div []
-                [ text "enter link to google form"
+            div
+                []
+                [ text "enter link to google form:"
+                , br [] []
                 , input [ onInput ChangeSheetId ] []
-                , button [ onClick ProceedWithSheetId ] [ text "Go!" ]
+                , button [ onClick ProceedWithSheetId ] [ text "go!" ]
                 ]
 
         Cards ->
             case model.data of
                 Nothing ->
-                    text "There is no data ):. Refresh the page and start again. The sheet must be a public one."
+                    text "there is no data ):. refresh the page and start again. the sheet must be a public one."
 
                 Just data ->
+                    let
+                        buttonStyle =
+                            css [ S.margin (S.rem 0.5), S.padding (S.rem 0.5), S.touchAction S.manipulation ]
+                    in
                     section [] <|
                         [ div []
                             [ h1 []
@@ -178,9 +186,10 @@ view model =
                                 ]
                             ]
                         , footer []
-                            [ button [ onClick PreviousCard ] [ text "previous" ]
-                            , button [ onClick FlipCard ] [ text "flip it" ]
+                            [ button [ onClick PreviousCard, buttonStyle ] [ text "previous" ]
+                            , button [ onClick NextCard, buttonStyle ] [ text "next" ]
+                            , br [] []
+                            , button [ onClick FlipCard, buttonStyle ] [ text "flip it" ]
                             , text <| "Card " ++ String.fromInt (model.currentCard + 1) ++ " of " ++ (String.fromInt <| Array.length <| data)
-                            , button [ onClick NextCard ] [ text "next" ]
                             ]
                         ]
